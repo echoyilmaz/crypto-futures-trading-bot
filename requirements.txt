@@ -1,0 +1,5 @@
+aiohttp
+discord.py
+pandas
+ta
+ta-lib

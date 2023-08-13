@@ -1,0 +1,4 @@
+discord.log
+*.pickle
+*__pycache__/
+config.json
