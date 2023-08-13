@@ -6,15 +6,20 @@ stop_percent = 0.03
 profit_percent = 0.05
 num_take_profit_levels = 3
 
-previous_alligator_state = "UNKNOWN"
-previous_previous_alligator_state = "UNKNOWN"
-current_alligator_state = "UNKNOWN"
+pair_states = {}  # Dictionary to store states for each pair
 
 async def load_indicators(prices):
     prices['Alligator_Jaw'], prices['Alligator_Teeth'], prices['Alligator_Lips'] = talib.WILLR(prices['high'], prices['low'], prices['close'], timeperiod=13), talib.WILLR(prices['high'], prices['low'], prices['close'], timeperiod=8), talib.WILLR(prices['high'], prices['low'], prices['close'], timeperiod=5)
     return prices
 
 async def perform_technical_analysis(pair, prices, depth):
+    if pair not in pair_states:
+        pair_states[pair] = {
+            "previous_alligator_state": "UNKNOWN",
+            "previous_previous_alligator_state": "UNKNOWN",
+            "current_alligator_state": "UNKNOWN"
+        }
+
     analyzed_prices = await load_indicators(prices)
 
     entry_price = analyzed_prices['close'].iloc[-1]
@@ -23,7 +28,9 @@ async def perform_technical_analysis(pair, prices, depth):
     alligator_teeth = analyzed_prices['Alligator_Teeth'].iloc[-1]
     alligator_lips = analyzed_prices['Alligator_Lips'].iloc[-1]
 
-    global previous_alligator_state, previous_previous_alligator_state, current_alligator_state
+    previous_alligator_state = pair_states[pair]["previous_alligator_state"]
+    previous_previous_alligator_state = pair_states[pair]["previous_previous_alligator_state"]
+    current_alligator_state = pair_states[pair]["current_alligator_state"]
 
     if alligator_jaw > alligator_teeth > alligator_lips:
         current_alligator_state = "UP"
@@ -32,8 +39,9 @@ async def perform_technical_analysis(pair, prices, depth):
     else:
         current_alligator_state = "SIDEWAYS"
 
-    previous_previous_alligator_state = previous_alligator_state
-    previous_alligator_state = current_alligator_state
+    pair_states[pair]["previous_previous_alligator_state"] = previous_alligator_state
+    pair_states[pair]["previous_alligator_state"] = current_alligator_state
+    pair_states[pair]["current_alligator_state"] = current_alligator_state
 
     if previous_previous_alligator_state == "DOWN" and previous_alligator_state == "SIDEWAYS" and current_alligator_state == "UP":
         suggested_direction = "LONG"
@@ -43,11 +51,11 @@ async def perform_technical_analysis(pair, prices, depth):
         suggested_direction = "WAIT"
 
     if suggested_direction == "WAIT":
-
         return {
-            "symbol": pair,
+            "pair": pair,
+            "previous_states": [previous_previous_alligator_state, previous_alligator_state, current_alligator_state],
             "direction": suggested_direction,
-            "current_price": entry_price,
+            "current_price": entry_price
         }
 
     stop_loss = await calculate_stop_loss(entry_price, stop_percent)
@@ -55,7 +63,8 @@ async def perform_technical_analysis(pair, prices, depth):
     risk_to_reward = await calculate_risk_to_reward(entry_price, stop_loss, take_profits[-1])
 
     return {
-        "symbol": pair,
+        "pair": pair,
+        "previous_states": [previous_previous_alligator_state, previous_alligator_state, current_alligator_state],
         "direction": suggested_direction,
         "current_price": entry_price,
         "stop_loss": round(stop_loss, depth),
