@@ -2,10 +2,12 @@ import aiohttp
 import asyncio
 import pickle
 from datetime import datetime
+import discord
 
 from discord.ext import commands
 
 from utils.api import fetch_pairs, fetch_candles
+from utils.embeds import send_trade_embed
 
 class Crypto(commands.Cog, name="crypto"):
     def __init__(self, bot):
@@ -22,12 +24,14 @@ class Crypto(commands.Cog, name="crypto"):
             while True:
                 for pair in pairs:
                     result = await fetch_candles(session, pair, timeframe, candlestick_limit)
-                    if result['direction'] in ['LONG', 'SHORT']:
+                    print(result)
+                    if result is not None and result['direction'] in ['LONG', 'SHORT']:
                         trade = {
                             "trader": "Printer",
                             "time": datetime.now(),
                             "pair": result['pair'],
                             "side": result['direction'],
+                            "leverage": result['leverage'],
                             "entry": result['current_price'],
                             "targets": result.get('take_profits', []),
                             "stop": result.get('stop_loss', None),
@@ -35,7 +39,9 @@ class Crypto(commands.Cog, name="crypto"):
                             "current_target": 0
                         }
                         print(trade)
+                        await send_trade_embed(trade)
 
+                    print(result)
                     await asyncio.sleep(0.2)
 
         # Store trade positions using pickle

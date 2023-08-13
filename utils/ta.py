@@ -2,8 +2,8 @@ import talib
 
 from utils.math import calculate_stop_loss, calculate_take_profits, calculate_risk_to_reward
 
-stop_percent = 0.03
-profit_percent = 0.05
+stop_percent = 1
+profit_percent = 1
 num_take_profit_levels = 3
 
 pair_previous_states = {}  # Dictionary to store previous states for each pair
@@ -33,7 +33,7 @@ async def perform_technical_analysis(pair, prices, depth):
     else:
         current_alligator_state = previous_alligator_state
 
-    if current_alligator_state != previous_alligator_state:  # Only update state if different
+    if current_alligator_state != previous_alligator_state:
         pair_previous_states[pair] = current_alligator_state
 
     if previous_alligator_state == "UP" and current_alligator_state == "DOWN":
