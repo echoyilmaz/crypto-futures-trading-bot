@@ -1,10 +1,11 @@
+import aiohttp
+import asyncio
+import pickle
+from datetime import datetime
+
 from discord.ext import commands
 
-import aiohttp
-
 from utils.api import fetch_pairs, fetch_candles
-
-import asyncio
 
 class Crypto(commands.Cog, name="crypto"):
     def __init__(self, bot):
@@ -21,8 +22,25 @@ class Crypto(commands.Cog, name="crypto"):
             while True:
                 for pair in pairs:
                     result = await fetch_candles(session, pair, timeframe, candlestick_limit)
-                    print(result)
+                    if result['direction'] in ['LONG', 'SHORT']:
+                        trade = {
+                            "trader": "Printer",
+                            "time": datetime.now(),
+                            "pair": result['pair'],
+                            "side": result['direction'],
+                            "entry": result['current_price'],
+                            "targets": result.get('take_profits', []),
+                            "stop": result.get('stop_loss', None),
+                            "status": "OPEN",
+                            "current_target": 0
+                        }
+                        print(trade)
+
                     await asyncio.sleep(0.2)
+
+        # Store trade positions using pickle
+        with open('trade_positions.pickle', 'wb') as f:
+            pickle.dump(self.bot.trade_positions, f)
 
 def setup(bot):
     bot.add_cog(Crypto(bot))

@@ -20,9 +20,9 @@ async def perform_technical_analysis(pair, prices, depth):
 
     entry_price = analyzed_prices['close'].iloc[-1]
 
-    alligator_jaw = analyzed_prices['Alligator_Jaw'].iloc[-2]
-    alligator_teeth = analyzed_prices['Alligator_Teeth'].iloc[-2]
-    alligator_lips = analyzed_prices['Alligator_Lips'].iloc[-2]
+    alligator_jaw = analyzed_prices['Alligator_Jaw'].iloc[-1]
+    alligator_teeth = analyzed_prices['Alligator_Teeth'].iloc[-1]
+    alligator_lips = analyzed_prices['Alligator_Lips'].iloc[-1]
 
     previous_alligator_state = pair_previous_states[pair]
 
@@ -30,6 +30,8 @@ async def perform_technical_analysis(pair, prices, depth):
         current_alligator_state = "UP"
     elif alligator_jaw < alligator_teeth < alligator_lips:
         current_alligator_state = "DOWN"
+    else:
+        current_alligator_state = previous_alligator_state
 
     if current_alligator_state != previous_alligator_state:  # Only update state if different
         pair_previous_states[pair] = current_alligator_state
