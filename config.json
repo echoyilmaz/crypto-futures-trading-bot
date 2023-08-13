@@ -1,0 +1,9 @@
+{
+  "prefix": "!",
+  "token": "YOUR_TOKEN",
+  "sync_commands_globally": true,
+  "callout_channel": YOUR_CHANNEL_ID,
+  "owners": [
+    YOUR_USER_ID
+  ]
+}
