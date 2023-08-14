@@ -1,13 +1,36 @@
 import talib
 
-from utils.math import calculate_stop_loss, calculate_take_profits, calculate_risk_to_reward
-
 stop_percent = 25  # Percentage value out of 100
 profit_percent = 25  # Percentage value out of 100
 leverage = 50
 num_take_profit_levels = 3
 
 pair_previous_states = {}  # Dictionary to store previous states for each pair
+
+async def calculate_stop_loss(entry_price, stop_percent, leverage, position_direction):
+    leverage_multiplier = 1 / leverage
+    if position_direction == "LONG":
+        stop_loss = entry_price - (entry_price * stop_percent / 100) * leverage_multiplier
+    else:
+        stop_loss = entry_price + (entry_price * stop_percent / 100) * leverage_multiplier
+    return stop_loss
+
+async def calculate_take_profits(entry_price, profit_percent, num_levels, leverage, position_direction):
+    leverage_multiplier = 1 / leverage
+    take_profits = []
+    for level in range(1, num_levels + 1):
+        if position_direction == "LONG":
+            take_profit = entry_price + (entry_price * (profit_percent * level / 100)) * leverage_multiplier
+        else:
+            take_profit = entry_price - (entry_price * (profit_percent * level / 100)) * leverage_multiplier
+        take_profits.append(take_profit)
+    return take_profits
+
+async def calculate_risk_to_reward(entry_price, stop_loss, take_profit):
+    risk = abs(entry_price - stop_loss)
+    reward = abs(take_profit - entry_price)
+    risk_to_reward = risk / reward
+    return risk_to_reward
 
 async def load_indicators(prices):
     prices['Alligator_Jaw'], prices['Alligator_Teeth'], prices['Alligator_Lips'] = talib.WILLR(prices['high'], prices['low'], prices['close'], timeperiod=13), talib.WILLR(prices['high'], prices['low'], prices['close'], timeperiod=8), talib.WILLR(prices['high'], prices['low'], prices['close'], timeperiod=5)

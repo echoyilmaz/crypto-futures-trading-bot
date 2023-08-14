@@ -39,17 +39,7 @@ async def send_position_close_embed(trade_data, new_trade, self, reason):
     entry_price = trade_data['entry']
     exit_price = new_trade['entry']  # Replace with the actual exit price
 
-    if trade_data["side"] == "LONG":
-        roi = ((exit_price - entry_price) / entry_price) * 100 * (trade_data['leverage'])
-    elif trade_data["side"] == "SHORT":
-        roi = ((entry_price - exit_price) / entry_price) * 100 * (trade_data['leverage'])
-
-    if trade_data['pair'] in self.bot.trade_positions:
-        pair_positions = self.bot.trade_positions[trade_data['pair']]
-        for position in pair_positions:
-            if position['side'] == trade_data['side'] and position['entry'] == trade_data['entry']:
-                position['roi'].append(roi)
-                break
+    roi = sum(trade_data['roi']) / len(trade_data['roi'])
 
     roi_color = 0x00ff00 if roi >= 0 else 0xff0000  # Green for positive ROI, red for negative ROI
 

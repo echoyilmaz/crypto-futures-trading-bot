@@ -99,10 +99,18 @@ async def on_ready() -> None:
         bot.logger.info("Syncing commands globally...")
         await bot.tree.sync()
 
-@tasks.loop(minutes=1.0)
-async def status_task() -> None:
-    statuses = ["with the market!"]
-    await bot.change_presence(activity=discord.Game(random.choice(statuses)))
+@tasks.loop(seconds=1.0)
+async def status_task():
+    total_roi = sum(sum(trade['roi']) for trade in bot.trade_positions)
+    num_trades = sum(len(trade['roi']) for trade in bot.trade_positions)
+    average_roi = total_roi / num_trades if num_trades > 0 else 0.0
+
+    if average_roi > 0:
+        status = f"and winning with {average_roi:.2f}% ROI"
+    else:
+        status = f"and losing with {average_roi:.2f}% ROI"
+
+    await bot.change_presence(activity=discord.Game(status))
 
 @bot.event
 async def on_message(message: discord.Message) -> None:
