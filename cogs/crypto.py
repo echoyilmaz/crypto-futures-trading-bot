@@ -1,6 +1,5 @@
 import aiohttp
 import asyncio
-import pickle
 from datetime import datetime
 
 from discord.ext import commands

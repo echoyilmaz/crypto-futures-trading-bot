@@ -2,7 +2,6 @@ import json
 import logging
 import os
 import platform
-import random
 import sys
 import pickle
 
