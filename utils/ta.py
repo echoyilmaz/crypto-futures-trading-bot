@@ -2,8 +2,8 @@ import talib
 
 from utils.math import calculate_stop_loss, calculate_take_profits, calculate_risk_to_reward
 
-stop_percent = 10  # Percentage value out of 100
-profit_percent = 10  # Percentage value out of 100
+stop_percent = 25  # Percentage value out of 100
+profit_percent = 25  # Percentage value out of 100
 leverage = 50
 num_take_profit_levels = 3
 
@@ -56,5 +56,6 @@ async def perform_technical_analysis(pair, prices, depth):
         "current_price": entry_price,
         "stop_loss": round(stop_loss, depth),
         "take_profits": [round(tp, depth) for tp in take_profits],
-        "risk_to_reward": round(risk_to_reward, 1)
+        "risk_to_reward": round(risk_to_reward, 1),
+        "roi": []
     }

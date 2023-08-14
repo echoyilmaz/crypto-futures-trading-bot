@@ -26,29 +26,38 @@ async def calculate_risk_to_reward(entry_price, stop_loss, take_profit):
     return risk_to_reward
 
 async def check_trade_status(self, new_trade):
-        for trade in self.bot.trade_positions:
-            if trade["status"] == "OPEN" and trade["pair"] == new_trade["pair"]:
-                current_price = new_trade['entry']  # Use the entry price as the current price from the fetched result
+    for trade in self.bot.trade_positions:
+        if trade["status"] == "OPEN" and trade["pair"] == new_trade["pair"]:
+            current_price = new_trade['entry']  # Use the entry price as the current price from the fetched result
 
-                if trade["side"] == "LONG":
-                    if current_price <= trade["stop"]:
-                        await send_position_close_embed(trade, new_trade, self, "Stop Loss Hit")
-                        trade["status"] = "CLOSED"
-                    else:
-                        for i, target in enumerate(trade["targets"]):
-                            if current_price >= target:
-                                trade["current_target"] = i + 1
-                                await send_position_close_embed(trade, new_trade, self, f"Profit Target {i + 1} Hit")
-                                trade["targets"].pop(0)
-                                break
-                elif trade["side"] == "SHORT":
-                    if current_price >= trade["stop"]:
-                        await send_position_close_embed(trade, new_trade, self, "Stop Loss Hit")
-                        trade["status"] = "CLOSED"
-                    else:
-                        for i, target in enumerate(trade["targets"]):
-                            if current_price <= target:
-                                trade["current_target"] = i + 1
-                                await send_position_close_embed(trade, new_trade, self, f"Profit Target {i + 1} Hit")
-                                trade["targets"].pop(0)
-                                break
+            if trade["side"] == "LONG":
+                if current_price <= trade["stop"]:
+                    await send_position_close_embed(trade, new_trade, self, "Stop Loss Hit")
+                    trade["status"] = "CLOSED"
+                else:
+                    last_hit_target = trade["current_target"]
+                    for i, target in enumerate(trade["targets"][last_hit_target:]):
+                        if current_price >= target:
+                            trade["current_target"] = last_hit_target + i + 1
+                            if trade["current_target"] == len(trade["targets"]):
+                                trade["status"] = "CLOSED"
+                                await send_position_close_embed(trade, new_trade, self, "Final Take Profit Hit")
+                            else:
+                                await send_position_close_embed(trade, new_trade, self, f"Profit Target {trade['current_target']} Hit")
+                    trade["targets"] = trade["targets"][trade["current_target"] - last_hit_target:]
+
+            elif trade["side"] == "SHORT":
+                if current_price >= trade["stop"]:
+                    await send_position_close_embed(trade, new_trade, self, "Stop Loss Hit")
+                    trade["status"] = "CLOSED"
+                else:
+                    last_hit_target = trade["current_target"]
+                    for i, target in enumerate(trade["targets"][last_hit_target:]):
+                        if current_price <= target:
+                            trade["current_target"] = last_hit_target + i + 1
+                            if trade["current_target"] == len(trade["targets"]):
+                                trade["status"] = "CLOSED"
+                                await send_position_close_embed(trade, new_trade, self, "Final Take Profit Hit")
+                            else:
+                                await send_position_close_embed(trade, new_trade, self, f"Profit Target {trade['current_target']} Hit")
+                    trade["targets"] = trade["targets"][trade["current_target"] - last_hit_target:]

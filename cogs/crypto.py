@@ -36,7 +36,8 @@ class Crypto(commands.Cog, name="crypto"):
                             "targets": result.get('take_profits', []),
                             "stop": result.get('stop_loss', None),
                             "status": "PASS",
-                            "current_target": 0
+                            "current_target": 0,
+                            "roi": []
                         }
 
                         await check_trade_status(self, trade)
@@ -49,7 +50,8 @@ class Crypto(commands.Cog, name="crypto"):
                             with open('trade_positions.pickle', 'wb') as f:
                                 pickle.dump(self.bot.trade_positions, f)
 
-                    print(result)
+                        print(trade)
+                        
                     await asyncio.sleep(0.15)
 
 def setup(bot):
