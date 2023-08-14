@@ -29,7 +29,7 @@ async def send_trade_embed(trade_data, self):
         embed.add_field(name="Current Target", value="No targets remaining", inline=True)
 
     embed.timestamp = trade_data["time"]
-    embed.set_footer(text="Trade initiated")
+    embed.set_footer(text="Trade Initiated")
 
     await channel.send(embed=embed)
 
@@ -41,9 +41,9 @@ async def send_position_close_embed(trade_data, new_trade, self, reason):
     exit_price = new_trade['entry']  # Replace with the actual exit price
 
     if trade_data["side"] == "LONG":
-        roi = ((exit_price - entry_price) / entry_price) * 100 * (1 / trade_data['leverage'])
+        roi = ((exit_price - entry_price) / entry_price) * 100 * (trade_data['leverage'])
     elif trade_data["side"] == "SHORT":
-        roi = ((entry_price - exit_price) / entry_price) * 100 * (1 / trade_data['leverage'])
+        roi = ((entry_price - exit_price) / entry_price) * 100 * (trade_data['leverage'])
 
     roi_color = 0x00ff00 if roi >= 0 else 0xff0000  # Green for positive ROI, red for negative ROI
 
@@ -60,7 +60,7 @@ async def send_position_close_embed(trade_data, new_trade, self, reason):
     embed.add_field(name="ROI", value=f"{roi:.2f}%", inline=True)  # Calculate ROI without rounding
 
     embed.timestamp = trade_data["time"]
-    embed.set_footer(text="Position closed")
+    embed.set_footer(text="Position Closed")
 
     await channel.send(embed=embed)
 
