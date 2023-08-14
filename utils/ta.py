@@ -26,12 +26,6 @@ async def calculate_take_profits(entry_price, profit_percent, num_levels, levera
         take_profits.append(take_profit)
     return take_profits
 
-async def calculate_risk_to_reward(entry_price, stop_loss, take_profit):
-    risk = abs(entry_price - stop_loss)
-    reward = abs(take_profit - entry_price)
-    risk_to_reward = risk / reward
-    return risk_to_reward
-
 async def load_indicators(prices):
     prices['Alligator_Jaw'], prices['Alligator_Teeth'], prices['Alligator_Lips'] = talib.WILLR(prices['high'], prices['low'], prices['close'], timeperiod=13), talib.WILLR(prices['high'], prices['low'], prices['close'], timeperiod=8), talib.WILLR(prices['high'], prices['low'], prices['close'], timeperiod=5)
     return prices
@@ -69,16 +63,13 @@ async def perform_technical_analysis(pair, prices, depth):
 
     stop_loss = await calculate_stop_loss(entry_price, stop_percent, leverage, suggested_direction)
     take_profits = await calculate_take_profits(entry_price, profit_percent, num_take_profit_levels, leverage, suggested_direction)
-    risk_to_reward = await calculate_risk_to_reward(entry_price, stop_loss, take_profits[-1])
-
+ 
     return {
         "pair": pair,
-        "previous_state": previous_alligator_state,
         "direction": suggested_direction,
         "leverage": leverage,
         "current_price": entry_price,
         "stop_loss": round(stop_loss, depth),
         "take_profits": [round(tp, depth) for tp in take_profits],
-        "risk_to_reward": round(risk_to_reward, 1),
         "roi": []
     }

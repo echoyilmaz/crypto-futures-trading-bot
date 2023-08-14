@@ -25,7 +25,6 @@ class Crypto(commands.Cog, name="crypto"):
 
                     if result is not None:
                         trade = {
-                            "trader": "Printer",
                             "time": datetime.now(),
                             "pair": result['pair'],
                             "side": result['direction'],
@@ -33,7 +32,7 @@ class Crypto(commands.Cog, name="crypto"):
                             "entry": result['current_price'],
                             "targets": result.get('take_profits', []),
                             "stop": result.get('stop_loss', None),
-                            "status": "PASS",
+                            "status": None,
                             "current_target": 0,
                             "roi": []
                         }
