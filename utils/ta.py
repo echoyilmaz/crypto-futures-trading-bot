@@ -2,8 +2,9 @@ import talib
 
 from utils.math import calculate_stop_loss, calculate_take_profits, calculate_risk_to_reward
 
-stop_percent = 1
-profit_percent = 1
+stop_percent = 10  # Percentage value out of 100
+profit_percent = 10  # Percentage value out of 100
+leverage = 50
 num_take_profit_levels = 3
 
 pair_previous_states = {}  # Dictionary to store previous states for each pair
@@ -43,22 +44,15 @@ async def perform_technical_analysis(pair, prices, depth):
     else:
         suggested_direction = "WAIT"
 
-    if suggested_direction == "WAIT":
-        return {
-            "pair": pair,
-            "previous_state": previous_alligator_state,
-            "direction": suggested_direction,
-            "current_price": entry_price
-        }
-
-    stop_loss = await calculate_stop_loss(entry_price, stop_percent)
-    take_profits = await calculate_take_profits(entry_price, profit_percent, num_take_profit_levels)
+    stop_loss = await calculate_stop_loss(entry_price, stop_percent, leverage, suggested_direction)
+    take_profits = await calculate_take_profits(entry_price, profit_percent, num_take_profit_levels, leverage, suggested_direction)
     risk_to_reward = await calculate_risk_to_reward(entry_price, stop_loss, take_profits[-1])
 
     return {
         "pair": pair,
         "previous_state": previous_alligator_state,
         "direction": suggested_direction,
+        "leverage": leverage,
         "current_price": entry_price,
         "stop_loss": round(stop_loss, depth),
         "take_profits": [round(tp, depth) for tp in take_profits],

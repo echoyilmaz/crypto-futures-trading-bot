@@ -2,12 +2,12 @@ import aiohttp
 import asyncio
 import pickle
 from datetime import datetime
-import discord
 
 from discord.ext import commands
 
 from utils.api import fetch_pairs, fetch_candles
 from utils.embeds import send_trade_embed
+from utils.math import check_trade_status
 
 class Crypto(commands.Cog, name="crypto"):
     def __init__(self, bot):
@@ -16,7 +16,7 @@ class Crypto(commands.Cog, name="crypto"):
 
     async def position_manager(self):
 
-        candlestick_limit = "400"
+        candlestick_limit = "300"
         timeframe = "1m"
 
         async with aiohttp.ClientSession() as session:
@@ -24,8 +24,8 @@ class Crypto(commands.Cog, name="crypto"):
             while True:
                 for pair in pairs:
                     result = await fetch_candles(session, pair, timeframe, candlestick_limit)
-                    print(result)
-                    if result is not None and result['direction'] in ['LONG', 'SHORT']:
+
+                    if result is not None:
                         trade = {
                             "trader": "Printer",
                             "time": datetime.now(),
@@ -35,18 +35,22 @@ class Crypto(commands.Cog, name="crypto"):
                             "entry": result['current_price'],
                             "targets": result.get('take_profits', []),
                             "stop": result.get('stop_loss', None),
-                            "status": "OPEN",
+                            "status": "PASS",
                             "current_target": 0
                         }
-                        print(trade)
-                        await send_trade_embed(trade)
+
+                        await check_trade_status(self, trade)
+
+                        if result['direction'] in ['LONG', 'SHORT']:
+                            trade['status'] = "OPEN"
+                            self.bot.trade_positions.append(trade)
+                            await send_trade_embed(trade, self)
+
+                            with open('trade_positions.pickle', 'wb') as f:
+                                pickle.dump(self.bot.trade_positions, f)
 
                     print(result)
-                    await asyncio.sleep(0.2)
-
-        # Store trade positions using pickle
-        with open('trade_positions.pickle', 'wb') as f:
-            pickle.dump(self.bot.trade_positions, f)
+                    await asyncio.sleep(0.15)
 
 def setup(bot):
     bot.add_cog(Crypto(bot))
