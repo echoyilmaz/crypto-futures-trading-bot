@@ -6,8 +6,7 @@ from datetime import datetime
 from discord.ext import commands
 
 from utils.api import fetch_pairs, fetch_candles
-from utils.embeds import send_trade_embed
-from utils.math import check_trade_status
+from utils.process import process_trade_data
 
 class Crypto(commands.Cog, name="crypto"):
     def __init__(self, bot):
@@ -40,15 +39,11 @@ class Crypto(commands.Cog, name="crypto"):
                             "roi": []
                         }
 
-                        await check_trade_status(self, trade)
-
-                        if result['direction'] in ['LONG', 'SHORT']:
-                            trade['status'] = "OPEN"
-                            self.bot.trade_positions.append(trade)
-                            await send_trade_embed(trade, self)
-                            print(trade)
-                            with open('trade_positions.pickle', 'wb') as f:
-                                pickle.dump(self.bot.trade_positions, f)
+                        try:
+                            await process_trade_data(self, trade)
+                        except Exception as e:
+                            import traceback
+                            traceback.print_exc()
 
                     await asyncio.sleep(0.15)
 
