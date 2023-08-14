@@ -28,17 +28,16 @@ bot = Bot(
 )
 
 bot.task_list = []
-bot.trade_positions = []
 
-if os.path.isfile("pickled_positions.pickle") and os.path.getsize("pickled_positions.pickle") > 0:
-    with open('pickled_positions.pickle', 'rb') as pickle_db:
-        loaded_positions = pickle.load(pickle_db)
-        if loaded_positions:
-            bot.trade_positions = loaded_positions
+if os.path.isfile("trade_positions.pickle") and os.path.getsize("trade_positions.pickle") > 0:
+	pickle_db = open('trade_positions.pickle', 'rb')
+	bot.trade_positions = pickle.load(pickle_db)
+	pickle_db.close()
 else:
-    bot.trade_positions = []
-    with open('pickled_positions.pickle', 'wb') as pickle_db:
-        pickle.dump(bot.trade_positions, pickle_db)
+	bot.trade_positions = []
+	pickle_db = open('trade_positions.pickle', 'wb')
+	pickle.dump(bot.trade_positions, pickle_db)
+	pickle_db.close()
 
 class LoggingFormatter(logging.Formatter):
     # Colors
@@ -103,8 +102,13 @@ async def on_ready() -> None:
 
 @tasks.loop(seconds=1.0)
 async def status_task():
-    total_roi = sum(sum(trade['roi']) for trade in bot.trade_positions)
-    num_trades = sum(len(trade['roi']) for trade in bot.trade_positions)
+    closed_trades = [trade for trade in bot.trade_positions if trade["status"] == "CLOSED"]
+    
+    if not closed_trades:
+        return
+
+    total_roi = sum(sum(trade['roi']) for trade in closed_trades)
+    num_trades = sum(len(trade['roi']) for trade in closed_trades)
     average_roi = total_roi / num_trades if num_trades > 0 else 0.0
 
     if average_roi > 0:

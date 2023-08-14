@@ -32,14 +32,6 @@ async def send_position_open_embed(trade_data, self):
 
     await channel.send(embed=embed)
 
-    side_text = "long" if trade_data["side"] == "LONG" else "short"
-    pair = trade_data["pair"][:-4]  # Remove the last 4 letters from the pair
-    stop_loss = f"sl {trade_data['stop']}" if trade_data["stop"] else ""
-    targets = ", ".join([f"{target}" for target in trade_data["targets"]])
-    callout_message = f"!{side_text} {pair} {trade_data['leverage']}x {stop_loss} tp {targets}"
-    
-    await channel.send(callout_message)
-
 async def send_position_close_embed(trade_data, new_trade, self, reason):
     channel_id = self.bot.config['callout_channel']
     channel = self.bot.get_channel(channel_id)
