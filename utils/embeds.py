@@ -32,6 +32,14 @@ async def send_trade_embed(trade_data, self):
 
     await channel.send(embed=embed)
 
+    side_text = "long" if trade_data["side"] == "LONG" else "short"
+    pair = trade_data["pair"][:-4]  # Remove the last 4 letters from the pair
+    stop_loss = f"sl {trade_data['stop']}" if trade_data["stop"] else ""
+    targets = ", ".join([f"{target}" for target in trade_data["targets"]])
+    callout_message = f"!{side_text} {pair} {trade_data['leverage']}x {stop_loss} tp {targets}"
+    
+    await channel.send(callout_message)
+
 async def send_position_close_embed(trade_data, new_trade, self, reason):
     channel_id = self.bot.config['callout_channel']
     channel = self.bot.get_channel(channel_id)
@@ -51,7 +59,20 @@ async def send_position_close_embed(trade_data, new_trade, self, reason):
     embed.add_field(name="Leverage", value=f"{trade_data['leverage']}x", inline=True)
 
     embed.add_field(name="Entry Price", value=f"${entry_price}", inline=True)
+    embed.add_field(name="Stop Loss", value=f"${trade_data['stop']}" if trade_data["stop"] else "N/A", inline=True)
     embed.add_field(name="Exit Price", value=f"${exit_price}", inline=True)
+    if trade_data["targets"]:
+        targets_str = "\n".join([f"{index + 1}: ${target}" for index, target in enumerate(trade_data["targets"])])
+        embed.add_field(name="Profit Targets", value=targets_str, inline=False)
+    else:
+        embed.add_field(name="Profit Targets", value="None", inline=False)
+
+    current_target_index = trade_data["current_target"]
+    if current_target_index < len(trade_data["targets"]):
+        current_target_price = trade_data["targets"][current_target_index]
+        embed.add_field(name="Current Target", value=f"{current_target_index + 1}: ${current_target_price}", inline=True)
+    else:
+        embed.add_field(name="Current Target", value="No targets remaining", inline=True)
     embed.add_field(name="Average ROI", value=f"{roi:.2f}%", inline=True)  # Calculate ROI without rounding
 
     embed.timestamp = trade_data["time"]

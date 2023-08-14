@@ -29,10 +29,13 @@ bot = Bot(
 )
 
 bot.task_list = []
+bot.trade_positions = []
 
 if os.path.isfile("pickled_positions.pickle") and os.path.getsize("pickled_positions.pickle") > 0:
     with open('pickled_positions.pickle', 'rb') as pickle_db:
-        bot.trade_positions = pickle.load(pickle_db)
+        loaded_positions = pickle.load(pickle_db)
+        if loaded_positions:
+            bot.trade_positions = loaded_positions
 else:
     bot.trade_positions = []
     with open('pickled_positions.pickle', 'wb') as pickle_db:

@@ -46,12 +46,10 @@ class Crypto(commands.Cog, name="crypto"):
                             trade['status'] = "OPEN"
                             self.bot.trade_positions.append(trade)
                             await send_trade_embed(trade, self)
-
+                            print(trade)
                             with open('trade_positions.pickle', 'wb') as f:
                                 pickle.dump(self.bot.trade_positions, f)
 
-                        print(trade)
-                        
                     await asyncio.sleep(0.15)
 
 def setup(bot):
