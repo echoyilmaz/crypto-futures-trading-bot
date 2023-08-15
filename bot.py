@@ -104,18 +104,17 @@ async def on_ready() -> None:
 async def status_task():
     closed_trades = [trade for trade in bot.trade_positions if trade["status"] == "CLOSED"]
     
-    if not closed_trades:
-        return
+    num_wins = sum(1 for trade in closed_trades if sum(trade['roi']) > 0)
+    num_losses = sum(1 for trade in closed_trades if sum(trade['roi']) < 0)
+    num_trades = len(closed_trades)
 
     total_roi = sum(sum(trade['roi']) for trade in closed_trades)
-    num_trades = sum(len(trade['roi']) for trade in closed_trades)
     average_roi = total_roi / num_trades if num_trades > 0 else 0.0
 
-    if average_roi > 0:
-        status = f"and winning with {average_roi:.2f}% ROI"
-    else:
-        status = f"and losing with {average_roi:.2f}% ROI"
+    wins_losses_trades = f"{num_wins}W/{num_losses}L/{num_trades}T"
+    formatted_average_roi = f"{average_roi:.2f}% ROI avg." if average_roi >= 0 else "-{:.2f}% ROI avg.".format(abs(average_roi))
 
+    status = f"{wins_losses_trades} ({formatted_average_roi})"
     await bot.change_presence(activity=discord.Game(status))
 
 @bot.event

@@ -15,7 +15,7 @@ class Crypto(commands.Cog, name="crypto"):
     async def position_manager(self):
 
         candlestick_limit = "100"
-        timeframe = "5m"
+        timeframe = "1m"
 
         async with aiohttp.ClientSession() as session:
             pairs = await fetch_pairs(session)

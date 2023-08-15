@@ -1,76 +1,74 @@
-import numpy as np
-import pandas as pd
-import math
+import talib
 
-# Parameters
-stop_percent = 25  # Stop percentage as a value out of 100
+stop_percent = 25  # Percentage value out of 100
+profit_percent = 25  # Percentage value out of 100
 leverage = 50
 num_take_profit_levels = 3
 
-async def calculate_take_profits(entry_price, position_direction):
+pair_previous_states = {}  # Dictionary to store previous states for each pair
+
+async def calculate_stop_loss(entry_price, stop_percent, leverage, position_direction):
+    leverage_multiplier = 1 / leverage
+    if position_direction == "LONG":
+        stop_loss = entry_price - (entry_price * stop_percent / 100) * leverage_multiplier
+    else:
+        stop_loss = entry_price + (entry_price * stop_percent / 100) * leverage_multiplier
+    return stop_loss
+
+async def calculate_take_profits(entry_price, profit_percent, num_levels, leverage, position_direction):
+    leverage_multiplier = 1 / leverage
     take_profits = []
-    for level in range(1, num_take_profit_levels + 1):
+    for level in range(1, num_levels + 1):
         if position_direction == "LONG":
-            take_profit = entry_price + entry_price * level * (stop_percent / 100) / leverage
+            take_profit = entry_price + (entry_price * (profit_percent * level / 100)) * leverage_multiplier
         else:
-            take_profit = entry_price - entry_price * level * (stop_percent / 100) / leverage
+            take_profit = entry_price - (entry_price * (profit_percent * level / 100)) * leverage_multiplier
         take_profits.append(take_profit)
     return take_profits
 
+async def load_indicators(prices):
+    prices['Alligator_Jaw'], prices['Alligator_Teeth'], prices['Alligator_Lips'] = talib.WILLR(prices['high'], prices['low'], prices['close'], timeperiod=13), talib.WILLR(prices['high'], prices['low'], prices['close'], timeperiod=8), talib.WILLR(prices['high'], prices['low'], prices['close'], timeperiod=5)
+    return prices
+
 async def perform_technical_analysis(pair, prices, depth):
-    entry_price = prices['close'].iloc[-1]
-    # Calculate Twin Range Filter
-    twin_range_filter = calculate_twin_range_filter(prices['close'])
+    if pair not in pair_previous_states:
+        pair_previous_states[pair] = "UNKNOWN"
 
-    # Determine the trade direction based on Twin Range Filter
-    if(math.isnan(twin_range_filter[0])):
-        suggested_direction = "WAIT"
+    analyzed_prices = await load_indicators(prices)
+
+    entry_price = analyzed_prices['close'].iloc[-1]
+
+    alligator_jaw = analyzed_prices['Alligator_Jaw'].iloc[-1]
+    alligator_teeth = analyzed_prices['Alligator_Teeth'].iloc[-1]
+    alligator_lips = analyzed_prices['Alligator_Lips'].iloc[-1]
+
+    previous_alligator_state = pair_previous_states[pair]
+
+    if alligator_jaw > alligator_teeth > alligator_lips:
+        current_alligator_state = "UP"
+    elif alligator_jaw < alligator_teeth < alligator_lips:
+        current_alligator_state = "DOWN"
     else:
-        if entry_price > twin_range_filter[0]:
-            suggested_direction = "LONG"
-            stop_price = entry_price * (1 - (stop_percent / leverage) / 100)
-        else:
-            suggested_direction = "SHORT"
-            stop_price = entry_price * (1 + (stop_percent / leverage) / 100)
+        current_alligator_state = previous_alligator_state
 
-    take_profits = await calculate_take_profits(entry_price, suggested_direction)
+    if current_alligator_state != previous_alligator_state:
+        pair_previous_states[pair] = current_alligator_state
 
+    if previous_alligator_state == "UP" and current_alligator_state == "DOWN":
+        suggested_direction = "SHORT"
+    elif previous_alligator_state == "DOWN" and current_alligator_state == "UP":
+        suggested_direction = "LONG"
+    else:
+        suggested_direction = "WAIT"
+
+    stop_loss = await calculate_stop_loss(entry_price, stop_percent, leverage, suggested_direction)
+    take_profits = await calculate_take_profits(entry_price, profit_percent, num_take_profit_levels, leverage, suggested_direction)
+ 
     return {
         "pair": pair,
         "direction": suggested_direction,
         "leverage": leverage,
         "current_price": entry_price,
-        "stop_loss": round(stop_price, depth),
+        "stop_loss": round(stop_loss, depth),
         "take_profits": [round(tp, depth) for tp in take_profits],
     }
-
-# Twin Range Filter Calculation
-def calculate_twin_range_filter(source):
-    # Calculate Smooth Average Range (SAR)
-    per1 = 27
-    mult1 = 1.6
-    per2 = 55
-    mult2 = 2
-    
-    smrng1 = smooth_range(source, per1, mult1)
-    smrng2 = smooth_range(source, per2, mult2)
-    smrng = (smrng1 + smrng2) / 2
-    
-    # Calculate Range Filter (RF)
-    rf = range_filter(source, smrng)
-    
-    return rf
-
-# Calculate Smooth Range
-def smooth_range(source, period, multiplier):
-    avg_range = pd.Series.abs(source - source.shift(1)).rolling(window=period).mean()
-    weighted_period = 2 * period - 1
-    smoothed_range = avg_range.ewm(span=weighted_period, adjust=False).mean() * multiplier
-    return smoothed_range
-
-# Calculate Range Filter
-def range_filter(source, smooth_range):
-    rf = source.copy()
-    for i in range(1, len(source)):
-        rf[i] = max(rf[i - 1] - smooth_range[i], min(rf[i - 1] + smooth_range[i], source[i]))
-    return rf
