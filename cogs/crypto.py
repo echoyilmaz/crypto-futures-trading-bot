@@ -15,7 +15,7 @@ class Crypto(commands.Cog, name="crypto"):
     async def position_manager(self):
 
         candlestick_limit = "100"
-        timeframe = "1m"
+        timeframe = "5m"
 
         async with aiohttp.ClientSession() as session:
             pairs = await fetch_pairs(session)
@@ -32,7 +32,7 @@ class Crypto(commands.Cog, name="crypto"):
                             "entry": result['current_price'],
                             "targets": result.get('take_profits', []),
                             "stop": result.get('stop_loss', None),
-                            "status": None,
+                            "status": "",
                             "current_target": 0,
                             "roi": []
                         }

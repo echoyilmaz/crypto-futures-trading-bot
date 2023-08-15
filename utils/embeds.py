@@ -1,11 +1,10 @@
 import discord
 
-async def send_position_open_embed(trade_data, self):
+async def send_position_open_embed(trade_data, self, reason):
     channel_id = self.bot.config['callout_channel']
     channel = self.bot.get_channel(channel_id)
 
-    embed = discord.Embed(title="Degenerate Play Detected", color=0x3498db)
-    embed.set_author(name="Crypto Trade Tracker 3m Scalp Algo")
+    embed = discord.Embed(title=reason, color=0x3498db)
 
     embed.add_field(name="Pair", value=trade_data["pair"], inline=True)
     embed.add_field(name="Position", value=trade_data["side"], inline=True)
@@ -28,7 +27,7 @@ async def send_position_open_embed(trade_data, self):
         embed.add_field(name="Current Target", value="No targets remaining", inline=True)
 
     embed.timestamp = trade_data["time"]
-    embed.set_footer(text="Trade Opened")
+    embed.set_footer(text=reason)
 
     await channel.send(embed=embed)
 
@@ -44,7 +43,6 @@ async def send_position_close_embed(trade_data, new_trade, self, reason):
     roi_color = 0x00ff00 if roi >= 0 else 0xff0000  # Green for positive ROI, red for negative ROI
 
     embed = discord.Embed(title=reason, color=roi_color)  # Change color based on ROI
-    embed.set_author(name="Crypto Trade Tracker 3m Scalp Algo")
 
     embed.add_field(name="Pair", value=trade_data["pair"], inline=True)
     embed.add_field(name="Position", value=trade_data["side"], inline=True)
