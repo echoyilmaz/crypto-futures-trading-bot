@@ -3,7 +3,7 @@ import talib
 stop_percent = 25  # Percentage value out of 100
 profit_percent = 25  # Percentage value out of 100
 leverage = 50
-num_take_profit_levels = 3
+num_take_profit_levels = 1
 
 pair_previous_states = {}  # Dictionary to store previous states for each pair
 
@@ -38,9 +38,9 @@ async def perform_technical_analysis(pair, prices, depth):
 
     entry_price = analyzed_prices['close'].iloc[-1]
 
-    alligator_jaw = analyzed_prices['Alligator_Jaw'].iloc[-1]
-    alligator_teeth = analyzed_prices['Alligator_Teeth'].iloc[-1]
-    alligator_lips = analyzed_prices['Alligator_Lips'].iloc[-1]
+    alligator_jaw = analyzed_prices['Alligator_Jaw'].iloc[-2]
+    alligator_teeth = analyzed_prices['Alligator_Teeth'].iloc[-2]
+    alligator_lips = analyzed_prices['Alligator_Lips'].iloc[-2]
 
     previous_alligator_state = pair_previous_states[pair]
 

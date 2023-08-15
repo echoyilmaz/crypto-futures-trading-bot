@@ -37,6 +37,8 @@ async def process_trade_data(self, new_trade):
         await send_position_open_embed(new_trade, self, "Trade Opened")
         await save_data(self)
         print(new_trade)
+    
+    print(new_trade)
 
     for trade in self.bot.trade_positions:
         if trade["status"] == "OPEN" and trade["pair"] == new_trade["pair"]:
