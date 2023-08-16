@@ -1,7 +1,7 @@
 import talib
 
-stop_percent = 25  # Percentage value out of 100
-profit_percent = 25  # Percentage value out of 100
+stop_percent = 10  # Percentage value out of 100
+profit_percent = 1000 # Percentage value out of 100
 leverage = 50
 num_take_profit_levels = 1
 

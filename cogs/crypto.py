@@ -16,6 +16,7 @@ class Crypto(commands.Cog, name="crypto"):
 
         candlestick_limit = "100"
         timeframe = "1m"
+        margin = 5
 
         async with aiohttp.ClientSession() as session:
             pairs = await fetch_pairs(session)
@@ -34,7 +35,9 @@ class Crypto(commands.Cog, name="crypto"):
                             "stop": result.get('stop_loss', None),
                             "status": "",
                             "current_target": 0,
-                            "roi": []
+                            "roi": [],
+                            "margin": margin,
+                            "realizedpnl": 0
                         }
 
                         try:
