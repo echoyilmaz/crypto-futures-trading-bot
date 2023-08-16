@@ -1,7 +1,7 @@
 import talib
 
 stop_percent = 10  # Percentage value out of 100
-profit_percent = 30  # Percentage value out of 100
+profit_percent = 30 # Percentage value out of 100
 leverage = 50
 num_take_profit_levels = 1
 
@@ -27,33 +27,43 @@ async def calculate_take_profits(entry_price, profit_percent, num_levels, levera
     return take_profits
 
 async def load_indicators(prices):
-    prices['RSI'] = talib.RSI(prices['close'], timeperiod=14)
-    prices['%K'], prices['%D'] = talib.STOCH(prices['high'], prices['low'], prices['close'], fastk_period=14, slowk_period=3, slowd_period=3)
-    prices['macd'], prices['signal'], prices['histogram'] = talib.MACD(prices['close'], fastperiod=12, slowperiod=26, signalperiod=9)
+    prices['Alligator_Jaw'], prices['Alligator_Teeth'], prices['Alligator_Lips'] = talib.WILLR(prices['high'], prices['low'], prices['close'], timeperiod=13), talib.WILLR(prices['high'], prices['low'], prices['close'], timeperiod=8), talib.WILLR(prices['high'], prices['low'], prices['close'], timeperiod=5)
     return prices
 
 async def perform_technical_analysis(pair, prices, depth):
+    if pair not in pair_previous_states:
+        pair_previous_states[pair] = "UNKNOWN"
 
     analyzed_prices = await load_indicators(prices)
 
     entry_price = analyzed_prices['close'].iloc[-1]
 
-    rsi = analyzed_prices['RSI'].iloc[-1]
-    stoch_k = analyzed_prices['%K'].iloc[-1]
-    stoch_d = analyzed_prices['%D'].iloc[-1]
-    macd = analyzed_prices['macd'].iloc[-1]
-    macd_signal = analyzed_prices['signal'].iloc[-1]
+    alligator_jaw = analyzed_prices['Alligator_Jaw'].iloc[-2]
+    alligator_teeth = analyzed_prices['Alligator_Teeth'].iloc[-2]
+    alligator_lips = analyzed_prices['Alligator_Lips'].iloc[-2]
 
-    if rsi > 70 and stoch_k > stoch_d and macd > macd_signal:
+    previous_alligator_state = pair_previous_states[pair]
+
+    if alligator_jaw > alligator_teeth > alligator_lips:
+        current_alligator_state = "UP"
+    elif alligator_jaw < alligator_teeth < alligator_lips:
+        current_alligator_state = "DOWN"
+    else:
+        current_alligator_state = previous_alligator_state
+
+    if current_alligator_state != previous_alligator_state:
+        pair_previous_states[pair] = current_alligator_state
+
+    if previous_alligator_state == "UP" and current_alligator_state == "DOWN":
         suggested_direction = "SHORT"
-    elif rsi < 30 and stoch_k < stoch_d and macd < macd_signal:
+    elif previous_alligator_state == "DOWN" and current_alligator_state == "UP":
         suggested_direction = "LONG"
     else:
         suggested_direction = "WAIT"
 
     stop_loss = await calculate_stop_loss(entry_price, stop_percent, leverage, suggested_direction)
     take_profits = await calculate_take_profits(entry_price, profit_percent, num_take_profit_levels, leverage, suggested_direction)
-
+ 
     return {
         "pair": pair,
         "direction": suggested_direction,

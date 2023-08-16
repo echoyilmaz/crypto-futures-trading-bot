@@ -105,7 +105,7 @@ async def status_task():
     closed_trades = [trade for trade in bot.trade_positions if trade["status"] == "CLOSED"]
     
     num_wins = sum(1 for trade in closed_trades if sum(trade['roi']) > 0)
-    num_losses = sum(1 for trade in closed_trades if sum(trade['roi']) < 0)
+    num_losses = sum(1 for trade in closed_trades if sum(trade['roi']) <= 0)
     num_trades = len(closed_trades)
 
     total_roi = sum(sum(trade['roi']) for trade in closed_trades)

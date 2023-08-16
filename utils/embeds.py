@@ -31,12 +31,12 @@ async def send_position_open_embed(trade_data, self, reason):
 
     await channel.send(embed=embed)
 
-async def send_position_close_embed(trade_data, new_trade, self, reason):
+async def send_position_close_embed(trade_data, current_price, self, reason):
     channel_id = self.bot.config['callout_channel']
     channel = self.bot.get_channel(channel_id)
 
     entry_price = trade_data['entry']
-    exit_price = new_trade['entry']  # Replace with the actual exit price
+    exit_price = current_price  # Replace with the actual exit price
 
     roi = sum(trade_data['roi']) / len(trade_data['roi'])
 

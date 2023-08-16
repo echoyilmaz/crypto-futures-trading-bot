@@ -32,7 +32,7 @@ class Crypto(commands.Cog, name="crypto"):
 
                                         current_price = prices['close'].iloc[-1]
 
-                                        await handle_open_trade(current_price, trade, trade, self)
+                                        await handle_open_trade(current_price, trade, self)
 
                                         await asyncio.sleep(0.15)
 
