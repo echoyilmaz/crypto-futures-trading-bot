@@ -42,13 +42,8 @@ async def handle_new_trade(trade_positions, new_trade, is_long_trade_open, is_sh
         trade_positions.append(new_trade)
         await send_position_open_embed(new_trade, self, "Trade Opened")
         await save_data(self)
-        print(new_trade)
 
     print(new_trade)
-
-    for trade in trade_positions:
-        if trade["status"] == "OPEN" and trade["pair"] == new_trade["pair"]:
-            await handle_open_trade(current_price, trade, new_trade, self)
 
 async def handle_open_trade(current_price, trade, new_trade, self):
     if trade["side"] == "LONG":
@@ -61,6 +56,8 @@ async def handle_open_trade(current_price, trade, new_trade, self):
             await close_trade_on_stop_loss(trade, new_trade, current_price, self)
         else:
             await handle_profit_targets(trade, current_price, new_trade, self)
+
+    print(trade)
 
 async def close_trade_on_stop_loss(trade, new_trade, current_price, self):
     trade["status"] = "CLOSED"

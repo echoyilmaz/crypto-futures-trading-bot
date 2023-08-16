@@ -33,8 +33,6 @@ async def load_indicators(prices):
     return prices
 
 async def perform_technical_analysis(pair, prices, depth):
-    if pair not in pair_previous_states:
-        pair_previous_states[pair] = "UNKNOWN"
 
     analyzed_prices = await load_indicators(prices)
 
