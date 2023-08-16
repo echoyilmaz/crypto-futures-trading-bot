@@ -52,16 +52,8 @@ async def fetch_candles(session, pair, interval, long_tf):
                 if len(prices.index) != 0:
                     prices = prices.astype(float)
                     prices.rename(columns={0: 'open_time', 1: 'open', 2: 'high', 3: 'low', 4: 'close', 5: 'volume', 6: 'close_time'}, inplace=True)
-                    
-                    open_times = prices['open_time'].values
-                    open_prices = prices['open'].values
-                    high_prices = prices['high'].values
-                    low_prices = prices['low'].values
-                    close_prices = prices['close'].values
 
-                    depth = pair['depth']
-
-                    return await perform_technical_analysis(pair['binance'], prices, depth)
+                    return prices
                 
         elif request.status == 429:
             print("API limit broken")

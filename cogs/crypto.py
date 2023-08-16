@@ -6,6 +6,7 @@ from discord.ext import commands
 
 from utils.api import fetch_pairs, fetch_candles
 from utils.process import process_trade_data
+from utils.ta import perform_technical_analysis
 
 class Crypto(commands.Cog, name="crypto"):
     def __init__(self, bot):
@@ -22,31 +23,35 @@ class Crypto(commands.Cog, name="crypto"):
             pairs = await fetch_pairs(session)
             while True:
                 for pair in pairs:
-                    result = await fetch_candles(session, pair, timeframe, candlestick_limit)
-
-                    if result is not None:
-                        trade = {
-                            "time": datetime.now(),
-                            "pair": result['pair'],
-                            "side": result['direction'],
-                            "leverage": result['leverage'],
-                            "entry": result['current_price'],
-                            "targets": result.get('take_profits', []),
-                            "stop": result.get('stop_loss', None),
-                            "status": "",
-                            "current_target": 0,
-                            "roi": [],
-                            "margin": margin,
-                            "realizedpnl": 0
-                        }
-
                         try:
-                            await process_trade_data(self, trade)
+                            prices = await fetch_candles(session, pair, timeframe, candlestick_limit)
+
+                            result = await perform_technical_analysis(pair['binance'], prices, pair['depth'])
+
+                            if result is not None:
+                                trade = {
+                                    "time": datetime.now(),
+                                    "pair": result['pair'],
+                                    "side": result['direction'],
+                                    "leverage": result['leverage'],
+                                    "entry": result['current_price'],
+                                    "targets": result.get('take_profits', []),
+                                    "stop": result.get('stop_loss', None),
+                                    "status": "",
+                                    "current_target": 0,
+                                    "roi": [],
+                                    "margin": margin,
+                                    "realizedpnl": 0
+                                }
+
+                                await process_trade_data(self, trade)
+
+                            await asyncio.sleep(0.15)
+
                         except Exception as e:
+                            
                             import traceback
                             traceback.print_exc()
-
-                    await asyncio.sleep(0.15)
 
 def setup(bot):
     bot.add_cog(Crypto(bot))
