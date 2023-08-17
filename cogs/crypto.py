@@ -2,7 +2,9 @@ import aiohttp
 import asyncio
 from datetime import datetime
 
+import discord
 from discord.ext import commands
+from discord.ext.commands import Context
 
 from utils.api import fetch_pairs, fetch_candles
 from utils.process import process_trade_data, handle_open_trade
@@ -13,6 +15,32 @@ class Crypto(commands.Cog, name="crypto"):
         self.bot = bot
         self.position_manager_loop = self.bot.loop.create_task(self.position_manager())
         self.position_manager_loop = self.bot.loop.create_task(self.open_trade_manager())
+
+    @commands.hybrid_command(name="stats", description="Show total stats.")
+    async def stats(self, ctx: Context) -> None:
+        closed_trades = [trade for trade in self.bot.trade_positions if trade["status"] == "CLOSED"]
+        
+        num_wins = sum(1 for trade in closed_trades if sum(trade['roi']) > 0)
+        num_losses = sum(1 for trade in closed_trades if sum(trade['roi']) <= 0)
+        num_trades = len(closed_trades)
+
+        total_roi = sum(sum(trade['roi']) for trade in closed_trades)
+        average_roi = total_roi / num_trades if num_trades > 0 else 0.0
+
+        wins_losses_trades = f"{num_wins}W/{num_losses}L/{num_trades}T"
+        formatted_average_roi = f"{average_roi:.2f}% ROI avg." if average_roi >= 0 else "-{:.2f}% ROI avg.".format(abs(average_roi))
+
+        # Create an embed
+        embed = discord.Embed(title="Trade Statistics", color=0x00ff00)
+        embed.add_field(name="Wins/Losses/Total Trades", value=wins_losses_trades, inline=False)
+        embed.add_field(name="Average ROI", value=formatted_average_roi, inline=False)
+
+        # Additional stats
+        total_realized_pnl = sum(trade["realizedpnl"] for trade in closed_trades)
+        embed.add_field(name="Total Realized PNL", value=f"${total_realized_pnl:.2f}", inline=False)
+
+        # Send the embed
+        await ctx.send(embed=embed)
 
     async def open_trade_manager(self):
 
@@ -83,5 +111,5 @@ class Crypto(commands.Cog, name="crypto"):
                             import traceback
                             traceback.print_exc()
 
-def setup(bot):
-    bot.add_cog(Crypto(bot))
+async def setup(bot):
+    await bot.add_cog(Crypto(bot))

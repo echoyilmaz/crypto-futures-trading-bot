@@ -23,7 +23,6 @@ async def close_opposing_trade(trade_positions, new_trade, opposite_side, curren
         existing_trade['roi'].append(roi)
         await send_position_close_embed(existing_trade, current_price, self, "Opposing Signal Received")
         await save_data(self)
-        print(existing_trade)
 
 async def calculate_roi(entry_price, exit_price, leverage, trade_side):
     if trade_side == "LONG":
@@ -43,8 +42,6 @@ async def handle_new_trade(trade_positions, new_trade, is_long_trade_open, is_sh
         await send_position_open_embed(new_trade, self, "Trade Opened")
         await save_data(self)
 
-    print(new_trade)
-
 async def handle_open_trade(current_price, trade, self):
     if trade["side"] == "LONG":
         if current_price <= trade["stop"]:
@@ -57,15 +54,12 @@ async def handle_open_trade(current_price, trade, self):
         else:
             await handle_profit_targets(trade, current_price, self)
 
-    print(trade)
-
 async def close_trade_on_stop_loss(trade, current_price, self):
     trade["status"] = "CLOSED"
     roi = await calculate_roi(trade['entry'], current_price, trade['leverage'], trade['side'])
     trade['roi'].append(roi)
     await send_position_close_embed(trade, current_price, self, "Stop Loss Hit")
     await save_data(self)
-    print(trade)
 
 async def handle_profit_targets(trade, current_price, self):
     for i, target in enumerate(trade["targets"]):
@@ -84,7 +78,6 @@ async def close_trade_at_final_target(trade, current_price, self):
     trade['roi'].append(roi)
     await send_position_close_embed(trade, current_price, self, "Final Take Profit Hit")
     await save_data(self)
-    print(trade)
 
 async def update_trade_state_for_target_hit(trade, current_price, target_index, self):
     roi = await calculate_roi(trade['entry'], current_price, trade['leverage'], trade['side'])
@@ -93,4 +86,3 @@ async def update_trade_state_for_target_hit(trade, current_price, target_index, 
         trade["stop"] = trade['entry']
     await send_position_close_embed(trade, current_price, self, f"Profit Target {trade['current_target']} Hit")
     await save_data(self)
-    print(trade)
