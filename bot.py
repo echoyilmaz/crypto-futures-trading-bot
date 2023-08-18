@@ -69,7 +69,7 @@ class LoggingFormatter(logging.Formatter):
         formatter = logging.Formatter(format, "%Y-%m-%d %H:%M:%S", style="{")
         return formatter.format(record)
 
-logger = logging.getLogger("discord_bot")
+logger = logging.getLogger("Crypto Futures Trading Bot")
 logger.setLevel(logging.INFO)
 
 console_handler = logging.StreamHandler()
@@ -90,9 +90,6 @@ bot.config = config
 @bot.event
 async def on_ready() -> None:
     bot.logger.info(f"Logged in as {bot.user.name}")
-    bot.logger.info(f"discord.py API version: {discord.__version__}")
-    bot.logger.info(f"Python version: {platform.python_version()}")
-    bot.logger.info(f"Running on: {platform.system()} {platform.release()} ({os.name})")
     bot.logger.info("-------------------")
     status_task.start()
     await load_cogs()
@@ -115,7 +112,7 @@ async def status_task():
     wins_losses_trades = f"{num_wins}W/{num_losses}L/{num_trades}T"
     formatted_average_roi = f"{average_roi:.2f}% ROI avg." if average_roi >= 0 else "-{:.2f}% ROI avg.".format(abs(average_roi))
 
-    status = f"{wins_losses_trades} ({formatted_average_roi}) (${total_pnl} profit)"
+    status = f"{wins_losses_trades} ({formatted_average_roi}) (${total_pnl:.2f} profit)"
     await bot.change_presence(activity=discord.Game(status))
 
 @bot.event

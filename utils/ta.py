@@ -1,7 +1,7 @@
 import talib
 
 stop_percent = 10  # Percentage value out of 100
-profit_percent = 30 # Percentage value out of 100
+profit_percent = 30  # Percentage value out of 100
 leverage = 50
 num_take_profit_levels = 1
 
@@ -28,6 +28,7 @@ async def calculate_take_profits(entry_price, profit_percent, num_levels, levera
 
 async def load_indicators(prices):
     prices['Alligator_Jaw'], prices['Alligator_Teeth'], prices['Alligator_Lips'] = talib.WILLR(prices['high'], prices['low'], prices['close'], timeperiod=13), talib.WILLR(prices['high'], prices['low'], prices['close'], timeperiod=8), talib.WILLR(prices['high'], prices['low'], prices['close'], timeperiod=5)
+    prices['RSI'] = talib.RSI(prices['close'], timeperiod=14)  # Calculate RSI with a period of 14
     return prices
 
 async def perform_technical_analysis(pair, prices, depth):
@@ -38,9 +39,10 @@ async def perform_technical_analysis(pair, prices, depth):
 
     entry_price = analyzed_prices['close'].iloc[-1]
 
-    alligator_jaw = analyzed_prices['Alligator_Jaw'].iloc[-2]
-    alligator_teeth = analyzed_prices['Alligator_Teeth'].iloc[-2]
-    alligator_lips = analyzed_prices['Alligator_Lips'].iloc[-2]
+    alligator_jaw = analyzed_prices['Alligator_Jaw'].iloc[-1]
+    alligator_teeth = analyzed_prices['Alligator_Teeth'].iloc[-1]
+    alligator_lips = analyzed_prices['Alligator_Lips'].iloc[-1]
+    rsi_value = analyzed_prices['RSI'].iloc[-1]
 
     previous_alligator_state = pair_previous_states[pair]
 
@@ -63,7 +65,7 @@ async def perform_technical_analysis(pair, prices, depth):
 
     stop_loss = await calculate_stop_loss(entry_price, stop_percent, leverage, suggested_direction)
     take_profits = await calculate_take_profits(entry_price, profit_percent, num_take_profit_levels, leverage, suggested_direction)
- 
+
     return {
         "pair": pair,
         "direction": suggested_direction,

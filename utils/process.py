@@ -21,7 +21,7 @@ async def close_opposing_trade(trade_positions, new_trade, opposite_side, curren
         existing_trade["status"] = "CLOSED"
         roi = await calculate_roi(existing_trade['entry'], current_price, existing_trade['leverage'], existing_trade['side'])
         existing_trade['roi'].append(roi)
-        existing_trade['realizedpnl'] = existing_trade['realizedpnl'] + round((existing_trade['margin'] * (roi / 100)), 2) - ((existing_trade['margin'] * existing_trade['leverage']) * 0.1)
+        existing_trade['realizedpnl'] = existing_trade['realizedpnl'] + round((existing_trade['margin'] * (roi / 100)), 2) - (existing_trade['margin'] * 0.1)
         await send_position_close_embed(existing_trade, current_price, self, "Opposing Signal Received")
         await save_data(self)
 
@@ -59,7 +59,7 @@ async def close_trade_on_stop_loss(trade, current_price, self):
     trade["status"] = "CLOSED"
     roi = await calculate_roi(trade['entry'], current_price, trade['leverage'], trade['side'])
     trade['roi'].append(roi)
-    trade['realizedpnl'] = trade['realizedpnl'] + round((trade['margin'] * (roi / 100)), 2) - ((trade['margin'] * trade['leverage']) * 0.1)
+    trade['realizedpnl'] = trade['realizedpnl'] + round((trade['margin'] * (roi / 100)), 2) - (trade['margin'] * 0.1)
     await send_position_close_embed(trade, current_price, self, "Stop Loss Hit")
     await save_data(self)
 
@@ -78,14 +78,14 @@ async def close_trade_at_final_target(trade, current_price, self):
     trade["status"] = "CLOSED"
     roi = await calculate_roi(trade['entry'], current_price, trade['leverage'], trade['side'])
     trade['roi'].append(roi)
-    trade['realizedpnl'] = trade['realizedpnl'] + round((trade['margin'] * (roi / 100)), 2) - ((trade['margin'] * trade['leverage']) * 0.1)
+    trade['realizedpnl'] = trade['realizedpnl'] + round((trade['margin'] * (roi / 100)), 2) - (trade['margin'] * 0.1)
     await send_position_close_embed(trade, current_price, self, "Final Take Profit Hit")
     await save_data(self)
 
 async def update_trade_state_for_target_hit(trade, current_price, target_index, self):
     roi = await calculate_roi(trade['entry'], current_price, trade['leverage'], trade['side'])
     trade['roi'].append(roi)
-    trade['realizedpnl'] = trade['realizedpnl'] + round((trade['margin'] * (roi / 100)), 2) - ((trade['margin'] * trade['leverage']) * 0.1)
+    trade['realizedpnl'] = trade['realizedpnl'] + round((trade['margin'] * (roi / 100)), 2) - (trade['margin'] * 0.1)
     if target_index == 0:
         trade["stop"] = trade['entry']
     await send_position_close_embed(trade, current_price, self, f"Profit Target {trade['current_target']} Hit")
