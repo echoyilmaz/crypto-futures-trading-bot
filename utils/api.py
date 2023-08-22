@@ -11,7 +11,7 @@ async def fetch_pairs(session):
             pairs = []
             for contract in data['data']['contracts']:
                 pair = str(contract['symbol'])
-                if 'USDT' in pair and contract['maxLongLeverage'] >= 20 and contract['maxShortLeverage'] >= 20:
+                if 'USDT' in pair and contract['maxLongLeverage'] >= 1 and contract['maxShortLeverage'] >= 1:
                     pair_entry = {'bingx': pair, 'binance': None, 'depth': None}
                     pair = ''.join(filter(lambda x: x not in '-', str(pair)))
                     pair_entry.update({'binance': pair})

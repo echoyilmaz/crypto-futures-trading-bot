@@ -1,7 +1,7 @@
 import talib
 
-stop_percent = 10  # Percentage value out of 100
-profit_percent = 30  # Percentage value out of 100
+stop_percent = 20  # Percentage value out of 100
+profit_percent = 80  # Percentage value out of 100
 leverage = 50
 num_take_profit_levels = 1
 
@@ -26,51 +26,57 @@ async def calculate_take_profits(entry_price, profit_percent, num_levels, levera
         take_profits.append(take_profit)
     return take_profits
 
-async def load_indicators(prices):
-    prices['Alligator_Jaw'], prices['Alligator_Teeth'], prices['Alligator_Lips'] = talib.WILLR(prices['high'], prices['low'], prices['close'], timeperiod=13), talib.WILLR(prices['high'], prices['low'], prices['close'], timeperiod=8), talib.WILLR(prices['high'], prices['low'], prices['close'], timeperiod=5)
-    prices['RSI'] = talib.RSI(prices['close'], timeperiod=14)  # Calculate RSI with a period of 14
-    return prices
+async def load_indicators(prices, oi, long_short_ratio):
+    oi['ema5'] = talib.EMA(oi['sumOpenInterest'], timeperiod=5)
+    oi['ema8'] = talib.EMA(oi['sumOpenInterest'], timeperiod=8)
+    long_short_ratio['long_ema'] = talib.EMA(long_short_ratio['longAccount'], timeperiod=8)
+    long_short_ratio['short_ema'] = talib.EMA(long_short_ratio['shortAccount'], timeperiod=8)
+    return oi, long_short_ratio
 
-async def perform_technical_analysis(pair, prices, depth):
+async def perform_technical_analysis(pair, prices, oi, long_short_ratio, depth):
     if pair not in pair_previous_states:
         pair_previous_states[pair] = "UNKNOWN"
 
-    analyzed_prices = await load_indicators(prices)
+    analyzed_oi, analyzed_ls_ratio = await load_indicators(prices, oi, long_short_ratio)
 
-    entry_price = analyzed_prices['close'].iloc[-1]
+    entry_price = prices['close'].iloc[-1]
+    oi_ema5 = analyzed_oi['ema5'].iloc[-1]
+    oi_ema8 = analyzed_oi['ema8'].iloc[-1]
+    long_ema = analyzed_ls_ratio['long_ema'].iloc[-1]
+    short_ema = analyzed_ls_ratio['short_ema'].iloc[-1]
 
-    alligator_jaw = analyzed_prices['Alligator_Jaw'].iloc[-1]
-    alligator_teeth = analyzed_prices['Alligator_Teeth'].iloc[-1]
-    alligator_lips = analyzed_prices['Alligator_Lips'].iloc[-1]
-    rsi_value = analyzed_prices['RSI'].iloc[-1]
+    previous_state = pair_previous_states[pair]
 
-    previous_alligator_state = pair_previous_states[pair]
-
-    if alligator_jaw > alligator_teeth > alligator_lips:
-        current_alligator_state = "UP"
-    elif alligator_jaw < alligator_teeth < alligator_lips:
-        current_alligator_state = "DOWN"
+    if oi_ema5 > oi_ema8 and long_ema > short_ema:
+        current_state = "UP"
+    elif oi_ema5 < oi_ema8 and long_ema < short_ema:
+        current_state = "DOWN"
     else:
-        current_alligator_state = previous_alligator_state
+        current_state = previous_state
 
-    if current_alligator_state != previous_alligator_state:
-        pair_previous_states[pair] = current_alligator_state
+    if current_state != previous_state:
+        pair_previous_states[pair] = current_state
 
-    if previous_alligator_state == "UP" and current_alligator_state == "DOWN":
-        suggested_direction = "SHORT"
-    elif previous_alligator_state == "DOWN" and current_alligator_state == "UP":
+    if previous_state == "UP" and current_state == "DOWN":
         suggested_direction = "LONG"
+    elif previous_state == "DOWN" and current_state == "UP":
+        suggested_direction = "SHORT"
     else:
         suggested_direction = "WAIT"
 
     stop_loss = await calculate_stop_loss(entry_price, stop_percent, leverage, suggested_direction)
     take_profits = await calculate_take_profits(entry_price, profit_percent, num_take_profit_levels, leverage, suggested_direction)
 
+    stop = round(stop_loss, depth)
+
+    if stop == entry_price:
+        suggested_direction = "WAIT"
+
     return {
         "pair": pair,
         "direction": suggested_direction,
         "leverage": leverage,
         "current_price": entry_price,
-        "stop_loss": round(stop_loss, depth),
+        "stop_loss": stop,
         "take_profits": [round(tp, depth) for tp in take_profits],
     }
