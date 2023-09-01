@@ -1,8 +1,8 @@
 import talib
 
-stop_percent = 20  # Percentage value out of 100
-profit_percent = 80  # Percentage value out of 100
-leverage = 50
+stop_percent = 10  # Percentage value out of 100
+profit_percent = 10  # Percentage value out of 100
+leverage = 10
 num_take_profit_levels = 1
 
 pair_previous_states = {}  # Dictionary to store previous states for each pair

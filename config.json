@@ -1,9 +1,12 @@
 {
   "prefix": "!",
-  "token": "YOUR_TOKEN",
-  "sync_commands_globally": true,
-  "callout_channel": YOUR_CHANNEL_ID,
+  "token": "MTA4NDkzMjUwNjk0OTc5MTc4NA.GNUkjh.q-e1yyJ1nY4WmXXYSi3P9_m6u6AEm9oJ7vfk4w",
+  "permissions": "8",
+  "application_id": "1084932506949791784",
+  "sync_commands_globally": false,
+  "callout_channel": 1140455699256721478,
   "owners": [
-    YOUR_USER_ID
+    653373534940168202,
+    201181078520725504
   ]
 }
